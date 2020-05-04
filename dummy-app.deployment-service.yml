@@ -1,0 +1,54 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: dummy-app
+  labels:
+    app: dummy-app
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: dummy-app
+    spec:
+      containers:
+        - name: dummy-app
+          image: ${dockerHubUsername}/dummy-app:v1
+          env:
+            - name: APP_NAME
+              value: "dummy-app"
+            - name: TEST_ME
+              value: "Hello, world!"
+            - name: K8_NODE
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: K8_POD
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: K8_NS
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: K8_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: PORT
+              value: "4444"
+          ports:
+            - containerPort: 4444
+              name: dummy-app
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dummy-app
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: dummy-app
+  selector:
+    app: dummy-app
